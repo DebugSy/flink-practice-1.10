@@ -1,0 +1,101 @@
+/bin/
+target
+.svn
+.settings
+.classpath
+.project
+.cache
+.cache-main
+.cache-tests
+datanucleus.log
+.README.md.html
+/.idea/
+*.iml
+*.DS_Store
+.idea
+/.project
+*.class
+git
+europa-server.pid
+transaction-logs/
+workSpace/
+
+
+######################
+# Node
+######################
+/node/**
+/node_modules/**
+
+
+######################
+# Intellij
+######################
+.idea/**
+
+
+######################
+# Maven
+######################
+/log/**
+/target/**
+
+######################
+# Gradle
+######################
+.gradle/**
+
+######################
+# Package Files
+######################
+*.war
+*.ear
+*.db
+
+######################
+# Windows
+######################
+# Windows image file caches
+Thumbs.db
+node_modules/
+package.json
+package-lock.json
+
+# Folder config file
+Desktop.ini
+
+
+######################
+# Directories
+######################
+/build/**
+/bin/**
+/spring_loaded/**
+/deploy/**
+
+######################
+# Logs
+######################
+*.log
+
+######################
+# Others
+######################
+*.class
+*.*~
+*~
+.merge_file*
+
+
+######################
+# Maven Wrapper
+######################
+!.mvn/wrapper/maven-wrapper.jar
+
+######################
+# Bower
+######################
+**/bower_components/**
+
+logs
+**/*.iml
