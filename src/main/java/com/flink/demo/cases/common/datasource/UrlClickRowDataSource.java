@@ -29,12 +29,14 @@ public class UrlClickRowDataSource extends RichParallelSourceFunction<Row> {
     public static String CLICK_FIELDS_WITH_ROWTIME = "userId,username,url,clickTime.rowtime,data_col,time_col";
 
     public static TypeInformation USER_CLICK_TYPEINFO = Types.ROW(
-            new String[]{"userId", "username", "url", "clickTime", "data_col", "time_col"},
+            new String[]{"userId", "username", "url", "clickTime", "rank", "uuid", "data_col", "time_col"},
             new TypeInformation[]{
                     Types.INT(),
                     Types.STRING(),
                     Types.STRING(),
                     Types.SQL_TIMESTAMP(),
+                    Types.INT(),
+                    Types.STRING(),
                     Types.STRING(),
                     Types.STRING()
             });
@@ -66,66 +68,28 @@ public class UrlClickRowDataSource extends RichParallelSourceFunction<Row> {
         }
     }
 
-    private Row genarateRow1(Random random) throws InterruptedException {
-        int indexOfThisSubtask = getRuntimeContext().getIndexOfThisSubtask();
-        Thread.sleep((indexOfThisSubtask + 1) * 10);
-        int nextInt = random.nextInt(5);
-        Integer userId = 65 + nextInt;
-        String username = "user" + (char) ('A' + nextInt);
-        String url = "http://www.inforefiner.com/api/" + (char) ('H' + random.nextInt(4));
-        Timestamp clickTime = new Timestamp(System.currentTimeMillis() - 7171000);//往前倒2小时
-        Date date = new Date(clickTime.getTime());
-        String dateStr = dateFormat.format(date);
-        String timeStr = timeFormat.format(date);
-        Row row = new Row(6);
-        row.setField(0, userId);
-        row.setField(1, username);
-        row.setField(2, null);
-        row.setField(3, clickTime);
-        row.setField(4, dateStr);
-        row.setField(5, null);
-        return row;
-    }
-
     private Row genarateRow2(Random random) throws InterruptedException {
         int indexOfThisSubtask = getRuntimeContext().getIndexOfThisSubtask();
         Thread.sleep((indexOfThisSubtask + 1) * 10);
         int nextInt = random.nextInt(5);
         Integer userId = 65 + nextInt;
-        String username = "user" + (char) ('A' + nextInt);
+        String username = "user" + (char) ('A' + nextInt) + "_" + UUID.randomUUID().toString().substring(0, 4);
         String url = "http://www.inforefiner.com/api/" + (char) ('H' + random.nextInt(4));
         Timestamp clickTime = new Timestamp(System.currentTimeMillis() - 7171000);//往前倒2小时
+        Integer rank = random.nextInt(100);
+        String uuid = UUID.randomUUID().toString();
         Date date = new Date(clickTime.getTime());
         String dateStr = dateFormat.format(date);
         String timeStr = timeFormat.format(date);
-        Row row = new Row(6);
+        Row row = new Row(8);
         row.setField(0, userId);
         row.setField(1, username);
         row.setField(2, url);
         row.setField(3, clickTime);
-        row.setField(4, null);
-        row.setField(5, timeStr);
-        return row;
-    }
-
-    private Row genarateRow3(Random random) throws InterruptedException {
-        int indexOfThisSubtask = getRuntimeContext().getIndexOfThisSubtask();
-        Thread.sleep((indexOfThisSubtask + 1) * 1000);
-        int nextInt = random.nextInt(100);
-        Integer userId = 95000 + nextInt;
-        String username = "user " + (char) ('A' + nextInt);
-        String url = "http://www.inforefiner.com/api/" + (char) ('H' + random.nextInt(4));
-        Timestamp clickTime = new Timestamp(System.currentTimeMillis() - 7171000);//往前倒2小时
-        Date date = new Date(clickTime.getTime());
-        String dateStr = dateFormat.format(date);
-        String timeStr = timeFormat.format(date);
-        Row row = new Row(6);
-        row.setField(0, userId);
-        row.setField(1, username);
-        row.setField(2, url);
-        row.setField(3, clickTime);
-        row.setField(4, null);
-        row.setField(5, timeStr);
+        row.setField(4, rank);
+        row.setField(5, uuid);
+        row.setField(6, null);
+        row.setField(7, timeStr);
         return row;
     }
 

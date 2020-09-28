@@ -34,4 +34,8 @@
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
+
+    <logger name="com.flink.demo.cases.case14.HBaseCustomSinkFunction" level="DEBUG"/>
+    <logger name="com.flink.demo.cases.case14.BufferedMutatorLoader" level="DEBUG"/>
+    <logger name="com.flink.demo.cases.case14.BufferedMutatorRemoveListener" level="DEBUG"/>
 </configuration>
