@@ -18,11 +18,6 @@ public class ConsoleTableSink implements AppendStreamTableSink<Row> {
     }
 
     @Override
-    public void emitDataStream(DataStream<Row> dataStream) {
-        dataStream.printToErr();
-    }
-
-    @Override
     public TypeInformation<Row> getOutputType() {
         return rowTypeInfo;
     }
