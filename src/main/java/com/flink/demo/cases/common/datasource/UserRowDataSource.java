@@ -45,7 +45,7 @@ public class UserRowDataSource extends RichSourceFunction<Row> {
             Integer userId = 65 + nextInt;
             String username = "用户" + (char) ('A' + nextInt);
             String address = "北京市朝阳区望京东湖街道" + nextInt + "号";
-            Timestamp activityTime = new Timestamp(System.currentTimeMillis());
+            Timestamp activityTime = new Timestamp(System.currentTimeMillis() - 7171000);
 
             row.setField(0, userId);
             row.setField(1, username);

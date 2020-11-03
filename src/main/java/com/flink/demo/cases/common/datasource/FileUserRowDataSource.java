@@ -15,28 +15,24 @@ import java.sql.Timestamp;
 /**
  * Created by P0007 on 2019/9/3.
  */
-public class FileUrlClickRowDataSource extends RichParallelSourceFunction<Row> {
+public class FileUserRowDataSource extends RichParallelSourceFunction<Row> {
 
-    private static final Logger logger = LoggerFactory.getLogger(FileUrlClickRowDataSource.class);
+    private static final Logger logger = LoggerFactory.getLogger(FileUserRowDataSource.class);
 
     private volatile boolean running = true;
 
-    public static TypeInformation USER_CLICK_TYPEINFO = Types.ROW(
-            new String[]{"userId", "username", "url", "clickTime", "rank", "uuid", "data_col", "time_col"},
+    public static TypeInformation USER_TYPEINFO = Types.ROW(
+            new String[]{"userId", "username", "address", "activityTime"},
             new TypeInformation[]{
                     Types.INT(),
                     Types.STRING(),
                     Types.STRING(),
-                    Types.SQL_TIMESTAMP(),
-                    Types.INT(),
-                    Types.STRING(),
-                    Types.STRING(),
-                    Types.STRING()
+                    Types.SQL_TIMESTAMP()
             });
 
-    private static final String d = "98,userA_603c,http://127.0.0.1/api/H,2020-09-24 09:46:02.779,45,7dd188da-63b1-406d-9563-4f0731070c77,20200924,094602";
+    private static final String d = "72,userH_cef2,北京市朝阳区望京东湖街道7号,2020-09-24 09:46:00.056";
 
-    private static final String dataFilePath = "/data/UrlClickData_Username_UUID.csv";
+    private static final String dataFilePath = "/data/UserData.csv";
 
     private BufferedReader reader;
 
@@ -63,15 +59,11 @@ public class FileUrlClickRowDataSource extends RichParallelSourceFunction<Row> {
 
     private Row parserDataToRow(String data) throws InterruptedException {
         String[] columnValues = data.split(",");
-        Row row = new Row(8);
+        Row row = new Row(4);
         row.setField(0, Integer.parseInt(columnValues[0]));
         row.setField(1, columnValues[1]);
         row.setField(2, columnValues[2]);
         row.setField(3, Timestamp.valueOf(columnValues[3]));
-        row.setField(4, Integer.parseInt(columnValues[4]));
-        row.setField(5, columnValues[5]);
-        row.setField(6, columnValues[6]);
-        row.setField(7, columnValues[7]);
         return row;
     }
 

@@ -1,6 +1,9 @@
 package com.flink.demo.cases.common.datasource;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.metrics.Counter;
+import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.streaming.api.watermark.Watermark;
@@ -26,10 +29,10 @@ public class UrlClickRowDataSource extends RichParallelSourceFunction<Row> {
 
     public static String CLICK_FIELDS = "userId,username,url,clickTime";
 
-    public static String CLICK_FIELDS_WITH_ROWTIME = "userId,username,url,clickTime.rowtime,data_col,time_col";
+    public static String CLICK_FIELDS_WITH_ROWTIME = "userId,username,url,clickTime,rank_num,uuid,data_col,time_col";
 
     public static TypeInformation USER_CLICK_TYPEINFO = Types.ROW(
-            new String[]{"userId", "username", "url", "clickTime", "rank", "uuid", "data_col", "time_col"},
+            new String[]{"userId", "username", "url", "clickTime", "rank_num", "uuid", "data_col", "time_col"},
             new TypeInformation[]{
                     Types.INT(),
                     Types.STRING(),
@@ -43,6 +46,18 @@ public class UrlClickRowDataSource extends RichParallelSourceFunction<Row> {
 
     public static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
     public static SimpleDateFormat timeFormat = new SimpleDateFormat("HHmmss");
+
+    /*
+     * metrics
+     * */
+    private Counter counter;
+
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        MetricGroup metricGroup = getRuntimeContext().getMetricGroup().addGroup("custom_group");
+        Counter outputCnt = metricGroup.counter("output_cnt");
+        this.counter = outputCnt;
+    }
 
     @Override
     public void run(SourceContext<Row> ctx) throws Exception {
@@ -62,6 +77,7 @@ public class UrlClickRowDataSource extends RichParallelSourceFunction<Row> {
                     throw new RuntimeException("Not support data type " + dataType);
             }
             logger.info("emit -> {}", row);
+            counter.inc();
             ctx.collect(row);
             i++;
             Thread.sleep(1000 * 1);

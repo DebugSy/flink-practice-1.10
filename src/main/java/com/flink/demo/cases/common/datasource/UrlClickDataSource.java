@@ -2,6 +2,9 @@ package com.flink.demo.cases.common.datasource;
 
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.metrics.Counter;
+import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.table.expressions.In;
@@ -25,6 +28,18 @@ public class UrlClickDataSource extends RichParallelSourceFunction<Tuple4<Intege
     public static String CLICK_FIELDS = "userId,username,url,clickTime";
 
     public static String CLICK_FIELDS_WITH_ROWTIME = "userId,username,url,clickTime,clickActionTime.rowtime";
+
+    /*
+    * metrics
+    * */
+    private Counter counter;
+
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        MetricGroup metricGroup = getRuntimeContext().getMetricGroup().addGroup("custom_group");
+        Counter outputCnt = metricGroup.counter("output_cnt");
+        this.counter = outputCnt;
+    }
 
     @Override
     public void run(SourceContext<Tuple4<Integer, String, String, Timestamp>> ctx) throws Exception {
@@ -50,6 +65,7 @@ public class UrlClickDataSource extends RichParallelSourceFunction<Tuple4<Intege
             logger.info("emit -> {}, count is {}", tuple4, count);
 //                ctx.collectWithTimestamp(tuple3, clickTime.getTime());
 //                ctx.emitWatermark(new Watermark(clickTime.getTime()));
+            counter.inc();
             ctx.collect(tuple4);
         }
     }

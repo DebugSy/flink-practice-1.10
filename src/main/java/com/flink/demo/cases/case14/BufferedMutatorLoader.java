@@ -51,10 +51,13 @@ public class BufferedMutatorLoader extends CacheLoader<String, BufferedMutator>
         failureThrowable.compareAndSet(null, exception);
     }
 
-    public void checkErrorAndRethrow() {
+    public boolean checkErrorAndRethrow() {
         Throwable cause = failureThrowable.get();
         if (cause != null) {
-            throw new RuntimeException("An error occurred in HBaseSink.", cause);
+            log.warn("An error occurred in HBaseSink.", cause);
+            return true;
+        } else {
+            return false;
         }
     }
 }
