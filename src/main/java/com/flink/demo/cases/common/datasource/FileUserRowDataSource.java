@@ -45,6 +45,7 @@ public class FileUserRowDataSource extends RichParallelSourceFunction<Row> {
     public void run(SourceContext<Row> ctx) throws Exception {
         while (running) {
             String s = null;
+            Thread.sleep(1000 * 10);
             while ((s = reader.readLine()) != null) {
                 Row row = parserDataToRow(s);
                 logger.info("emit {}", row);

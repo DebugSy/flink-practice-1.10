@@ -43,13 +43,13 @@ public class FlinkCEPTraining {
                         running = false;
                         break;
                     }
-                    if (i % 5 == 0) {
-                        log.info("sleeping 5s");
-                        Thread.sleep(1000 * 5);
-                    } else {
-                        log.info("sleeping 1s");
-                        Thread.sleep(1000 * 1);
-                    }
+//                    if (i % 5 == 0) {
+//                        log.info("sleeping 5s");
+//                        Thread.sleep(1000 * 5);
+//                    } else {
+//                        log.info("sleeping 1s");
+//                        Thread.sleep(1000 * 1);
+//                    }
                 }
             }
 
@@ -60,7 +60,7 @@ public class FlinkCEPTraining {
         }).setParallelism(1);
 
         Pattern<Integer, ?> onesThenZero =
-                Pattern.<Integer>begin("start", AfterMatchSkipStrategy.noSkip())
+                Pattern.<Integer>begin("start", AfterMatchSkipStrategy.skipToFirst("start"))
                         .where(new SimpleCondition<Integer>() {
                             @Override
                             public boolean filter(Integer value) throws Exception {

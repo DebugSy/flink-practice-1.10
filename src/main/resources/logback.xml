@@ -41,4 +41,6 @@
     <logger name="org.apache.flink.streaming.api.graph.StreamGraphHasherV2" level="DEBUG"/>
     <logger name="org.apache.flink.table.planner.codegen.agg.batch.AggCodeGenHelper" level="DEBUG"/>
     <logger name="com.flink.demo.cases.case19.HBaseSpilloverHDFSSinkFunction" level="DEBUG"/>
+    <logger name="com.flink.demo.cases.case23.bucketing.BucketingSink" level="DEBUG"/>
+    <logger name="org.apache.flink.streaming.connectors.fs.bucketing.BucketingSink" level="DEBUG"/>
 </configuration>

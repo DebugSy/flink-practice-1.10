@@ -1,14 +1,13 @@
 package com.flink.demo.cases.case08;
 
 import com.flink.demo.cases.common.datasource.UrlClickRowDataSource;
-import org.apache.flink.api.common.serialization.SimpleStringEncoder;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.filesystem.StreamingFileSink;
-import org.apache.flink.streaming.api.functions.sink.filesystem.rollingpolicies.DefaultRollingPolicy;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
+import org.apache.flink.streaming.connectors.fs.bucketing.BucketingSink;
+import org.apache.flink.streaming.connectors.fs.bucketing.DateTimeBucketer;
 import org.apache.flink.types.Row;
 
 import java.sql.Timestamp;
@@ -39,19 +38,11 @@ public class StreamingFileSinkOfRow {
 
         EventTimeBucketAssigner eventTimeBucketAssigner = new EventTimeBucketAssigner("yyyyMMddHHmm", ZoneId.systemDefault());
 
-        Path path = new Path("E://tmp/shiy/flink/streamingfilesink");
-        StreamingFileSink sink = StreamingFileSink
-                .forRowFormat(path, new SimpleStringEncoder<Row>())
-                .withRollingPolicy(DefaultRollingPolicy.builder()
-                        .withRolloverInterval(TimeUnit.MINUTES.toMillis(1))
-                        .withInactivityInterval(TimeUnit.SECONDS.toMillis(30))
-                        .withMaxPartSize(1024 * 1024 * 1024)
-                        .build())
-                .withBucketAssigner(eventTimeBucketAssigner)
-                .withBucketCheckInterval(1000 * 5)
-                .build();
-
-        watermarks.addSink(sink);
+        BucketingSink<Row> bucketingSink = new BucketingSink<>("E://tmp/shiy/flink/streamingfilesink");
+        bucketingSink.setBatchRolloverInterval(1000 * 10);
+        DateTimeBucketer dateTimeBucketer = new DateTimeBucketer("yyyy-MM-dd-HH-mm");
+        bucketingSink.setBucketer(dateTimeBucketer);
+        watermarks.addSink(bucketingSink);
 
         env.execute();
     }

@@ -2,11 +2,13 @@ package com.flink.demo.cases.case17;
 
 import com.flink.demo.cases.common.datasource.OutOfOrderDataSource;
 import com.flink.demo.cases.common.datasource.UrlClickRowDataSource;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.Table;
@@ -19,6 +21,7 @@ import org.apache.flink.table.delegation.Planner;
 import org.apache.flink.table.operations.Operation;
 import org.apache.flink.table.operations.QueryOperation;
 import org.apache.flink.types.Row;
+import org.apache.flink.util.Collector;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -28,21 +31,19 @@ import java.util.List;
  */
 public class RowNumberAggregateFuncCodegen {
 
-    private static String hopWindowSql = "select \n" +
-            "\tuserId,username,url,clickTime,rank_num,uuid,data_col,time_col,row_number_rank\n" +
-            "from (\n" +
-            "\tselect \n" +
-            "\t\tuserId,username,url,clickTime,rank_num,uuid,data_col,time_col,\n" +
-            "\t\tROW_NUMBER() OVER(PARTITION BY userId ORDER BY rank_num) as row_number_rank\n" +
-            "\tfrom \n" +
-            "\t\tclicks\n" +
-            ")\n" +
-            "where row_number_rank <= 5";
+//    private static String hopWindowSql = "select userId,count(url)," +
+//            "CONCAT_AGG('/', username) as cname," +
+//            "TUMBLE_START(clickTime, INTERVAL '5' SECOND) as window_start, " +
+//            "TUMBLE_END(clickTime, INTERVAL '5' SECOND) as window_end " +
+//            " from clicks group by userId, TUMBLE(clickTime, INTERVAL '5' SECOND)";
+
+    private static String hopWindowSql = "select userId,count(url), CONCAT_AGG(username, '/') as cname, TUMBLE_START(clickTime, INTERVAL '5' SECOND) as window_start, TUMBLE_END(clickTime, INTERVAL '5' SECOND) as window_end from clicks group by userId, TUMBLE(clickTime, INTERVAL '5' SECOND)";
 
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        EnvironmentSettings bsSettings = EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build();
-        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, bsSettings );
+//        EnvironmentSettings bsSettings = EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build();
+//        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, bsSettings);
+        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
         env.setParallelism(1);
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
@@ -56,10 +57,18 @@ public class RowNumberAggregateFuncCodegen {
             }
         });
 
-        tEnv.createTemporaryView("clicks", streamSourceWithWatermarks, UrlClickRowDataSource.CLICK_FIELDS_WITH_ROWTIME);
+        SingleOutputStreamOperator<Row> map = streamSourceWithWatermarks.process(new ProcessFunction<Row, Row>() {
+            @Override
+            public void processElement(Row value, Context ctx, Collector<Row> out) throws Exception {
+                out.collect(value);
+            }
+        }).returns(UrlClickRowDataSource.USER_CLICK_TYPEINFO);
+
+        tEnv.createTemporaryView("clicks", map, UrlClickRowDataSource.CLICK_FIELDS_WITH_ROWTIME);
+        tEnv.registerFunction("CONCAT_AGG", new ConcatAggFunction());
 
         Table table = tEnv.sqlQuery(hopWindowSql);
-        DataStream<Tuple2<Boolean, Row>> sinkStream = tEnv.toRetractStream(table, Row.class);
+        DataStream<Row> sinkStream = tEnv.toAppendStream(table, Row.class);
         sinkStream.printToErr();
 
         env.execute("flink job demo");

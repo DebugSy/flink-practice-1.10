@@ -68,7 +68,7 @@ public class HBaseSpilloverHDFSTraining {
         columnFamilyMap.put("data_col", "cf1");
         columnFamilyMap.put("time_col", "cf1");
 
-        tableNameSource.addSink(new HBaseSpilloverHDFSSinkFunction(
+        tableNameSource.startNewChain().addSink(new HBaseSpilloverHDFSSinkFunction(
                 "tableName",
                 2,
                 columnFamilyMap,

@@ -36,7 +36,7 @@ public class WindowSortTraining {
 
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(1);
+        env.setParallelism(2);
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         env.enableCheckpointing(1000 * 5, CheckpointingMode.EXACTLY_ONCE);
 

@@ -23,71 +23,23 @@ import java.sql.Timestamp;
 
 public class SQLBuiltInFunctionTraining {
 
-
-    private static String sql =
-            "SELECT * FROM clicks";
+    private static String sql = "SELECT username,word FROM clicks, LATERAL TABLE(explode(username, '_')) as T(word)";
 
     public static void main(String[] args) throws Exception {
-
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
-//        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        DataStream<Row> clickStream = env.addSource(new UrlClickRowDataSource(), "dummy_source",
-                TypeExtractor.getInputFormatTypes(new InputFormat<Row, InputSplit>() {
-                    @Override
-                    public void configure(Configuration parameters) {
-
-                    }
-
-                    @Override
-                    public BaseStatistics getStatistics(BaseStatistics cachedStatistics) throws IOException {
-                        return null;
-                    }
-
-                    @Override
-                    public InputSplit[] createInputSplits(int minNumSplits) throws IOException {
-                        return new InputSplit[0];
-                    }
-
-                    @Override
-                    public InputSplitAssigner getInputSplitAssigner(InputSplit[] inputSplits) {
-                        return null;
-                    }
-
-                    @Override
-                    public void open(InputSplit split) throws IOException {
-
-                    }
-
-                    @Override
-                    public boolean reachedEnd() throws IOException {
-                        return false;
-                    }
-
-                    @Override
-                    public Row nextRecord(Row reuse) throws IOException {
-                        return null;
-                    }
-
-                    @Override
-                    public void close() throws IOException {
-
-                    }
-                }));
-
-        SingleOutputStreamOperator returns = clickStream.map(r -> r).returns(UrlClickRowDataSource.USER_CLICK_TYPEINFO);
-
+        DataStream<Row> clickStream = env.addSource(new UrlClickRowDataSource())
+                .returns(UrlClickRowDataSource.USER_CLICK_TYPEINFO);
 
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
-        tableEnv.createTemporaryView("clicks", returns, UrlClickRowDataSource.CLICK_FIELDS_WITH_ROWTIME);
+        tableEnv.createTemporaryView("clicks", clickStream, UrlClickRowDataSource.CLICK_FIELDS_WITH_ROWTIME);
 
         //udf
-        tableEnv.registerFunction("rowKeyGen", new RowKeyGen());
-
+        tableEnv.registerFunction("explode", new SplitUDTF());
         Table table = tableEnv.sqlQuery(sql);
-//        Table select = table.select("withColumns(1)");
-        DataStream<Row> rowDataStream = tableEnv.toAppendStream(table, GenericTypeInfo.of(Row.class));
+        DataStream<Row> rowDataStream = tableEnv.toAppendStream(table, Row.class);
         rowDataStream.printToErr();
 
         env.execute("Flink Stream Join Training");
