@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.*;
@@ -229,11 +230,16 @@ public class BucketingSink<T>
 	public BucketingSink<T> setFTPConfig(Configuration config) {
 		this.ftpConfig = new FtpConfig();
 		ftpConfig.setHost("192.168.1.88");
-		ftpConfig.setDefaultPort();
+		ftpConfig.setPort(21);
+		ftpConfig.setProtocol("FTP");
 		ftpConfig.setConnectPattern("PORT");
-		ftpConfig.setTimeout(1000 * 60 * 60);
 		ftpConfig.setUsername("testftp");
 		ftpConfig.setPassword("123456");
+
+//		ftpConfig.setPort(22);
+//		ftpConfig.setProtocol("SFTP");
+//		ftpConfig.setUsername("sftpuser");
+//		ftpConfig.setPassword("123123");
 		return this;
 	}
 
@@ -573,10 +579,6 @@ public class BucketingSink<T>
 	}
 
 	@Override
-	public void notifyCheckpointAborted(long checkpointId) {
-	}
-
-	@Override
 	public void snapshotState(FunctionSnapshotContext context) throws Exception {
 		Preconditions.checkNotNull(restoredBucketStates, "The operator has not been properly initialized.");
 
@@ -655,69 +657,21 @@ public class BucketingSink<T>
 					LOG.debug("In-Progress file {} was already moved to final location {}.", file, partPath);
 				} else {
 					LOG.debug("In-Progress file {} was neither moved to pending nor is still in progress. Possibly, " +
-						"it was moved to final location by a previous snapshot restore", file);
+							"it was moved to final location by a previous snapshot restore", file);
 				}
 
 
-				//TODO shiy 文件截断恢复
-				/*
-				// truncate it or write a ".valid-length" file to specify up to which point it is valid
-				if (refTruncate != null) {
-					LOG.debug("Truncating {} to valid length {}", partPath, validLength);
-					// some-one else might still hold the lease from a previous try, we are
-					// recovering, after all ...
-					if (fs instanceof DistributedFileSystem) {
-						DistributedFileSystem dfs = (DistributedFileSystem) fs;
-						LOG.debug("Trying to recover file lease {}", partPath);
-						dfs.recoverLease(partPath);
-						boolean isclosed = dfs.isFileClosed(partPath);
-						StopWatch sw = new StopWatch();
-						sw.start();
-						while (!isclosed) {
-							if (sw.getTime() > asyncTimeout) {
-								break;
-							}
-							try {
-								Thread.sleep(500);
-							} catch (InterruptedException e1) {
-								// ignore it
-							}
-							isclosed = dfs.isFileClosed(partPath);
-						}
+				// write a ".valid-length" file to specify up to which point it is valid
+				Path validLengthFilePath = getValidLengthPathFor(partPath);
+				if (!ftpHandlerForAction.isFileExist(validLengthFilePath.toString()) && ftpHandlerForAction.isFileExist(partPath.toString())) {
+					LOG.debug("Writing valid-length file for {} to specify valid length {}", partPath, validLength);
+					IFtpHandler ftpHandler = initAndLoginIFtpHandler(ftpConfig);
+					try (OutputStream lengthFileOut = ftpHandler.getOutputStream(validLengthFilePath.toString())) {
+						lengthFileOut.write(Long.toString(validLength).getBytes());
 					}
-					Boolean truncated = (Boolean) refTruncate.invoke(fs, partPath, validLength);
-					if (!truncated) {
-						LOG.debug("Truncate did not immediately complete for {}, waiting...", partPath);
-
-						// we must wait for the asynchronous truncate operation to complete
-						StopWatch sw = new StopWatch();
-						sw.start();
-						long newLen = fs.getFileStatus(partPath).getLen();
-						while (newLen != validLength) {
-							if (sw.getTime() > asyncTimeout) {
-								break;
-							}
-							try {
-								Thread.sleep(500);
-							} catch (InterruptedException e1) {
-								// ignore it
-							}
-							newLen = fs.getFileStatus(partPath).getLen();
-						}
-						if (newLen != validLength) {
-							throw new RuntimeException("Truncate did not truncate to right length. Should be " + validLength + " is " + newLen + ".");
-						}
-					}
-				} else {
-					Path validLengthFilePath = getValidLengthPathFor(partPath);
-					if (!ftpHandler.isFileExist(validLengthFilePath.toString()) && ftpHandler.isFileExist(partPath.toString())) {
-						LOG.debug("Writing valid-length file for {} to specify valid length {}", partPath, validLength);
-						try (OutputStream lengthFileOut = ftpHandler.getOutputStream(validLengthFilePath.toString())) {
-							lengthFileOut.write(Long.toString(validLength).getBytes());
-						}
-					}
+					ftpHandler.logoutFtpServer();
 				}
-				*/
+
 
 			} catch (Exception e) {
 				LOG.error("Error while restoring BucketingSink state.", e);

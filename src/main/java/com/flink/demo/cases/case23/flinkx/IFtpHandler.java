@@ -39,6 +39,13 @@ public interface IFtpHandler {
     void loginFtpServer(FtpConfig ftpConfig) ;
 
     /**
+     *
+     */
+    int pwd();
+
+    boolean isConnected();
+
+    /**
      * 登出服务器
      */
     void logoutFtpServer();

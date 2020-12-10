@@ -35,6 +35,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.commons.net.ftp.FTP.*;
+
 /**
  * The concrete Ftp Utility class used for standard ftp
  *
@@ -63,6 +65,7 @@ public class FtpHandler implements IFtpHandler {
             ftpClient.connect(ftpConfig.getHost(), ftpConfig.getPort());
             // 登录
             ftpClient.login(ftpConfig.getUsername(), ftpConfig.getPassword());
+            ftpClient.setFileType(BINARY_FILE_TYPE);
             // 不需要写死ftp server的OS TYPE,FTPClient getSystemType()方法会自动识别
             ftpClient.setConnectTimeout(ftpConfig.getTimeout());
             ftpClient.setDataTimeout(ftpConfig.getTimeout());
@@ -86,6 +89,24 @@ public class FtpHandler implements IFtpHandler {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public int pwd(){
+        int result = 0;
+        try {
+            ftpClient.pwd();
+        } catch (IOException e) {
+            String error = "Print current path throw exception";
+            LOG.error(error, e);
+            throw new RuntimeException(error, e);
+        }
+        return result;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return ftpClient.isConnected();
     }
 
     @Override

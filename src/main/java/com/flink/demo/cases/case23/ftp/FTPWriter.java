@@ -117,7 +117,7 @@ public class FTPWriter<T> implements Writer<T> {
 	public void write(T element) throws IOException {
 		OutputStream outputStream = getStream();
 		byte[] bytes = element.toString().getBytes(charset);
-		pos += bytes.length;
+		pos += bytes.length + rowDelimiterBytes.length;
 		outputStream.write(bytes);
 		outputStream.write(rowDelimiterBytes);
 	}

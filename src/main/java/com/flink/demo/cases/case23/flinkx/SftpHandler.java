@@ -123,6 +123,16 @@ public class SftpHandler implements IFtpHandler {
     }
 
     @Override
+    public int pwd() {
+        return 0;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return false;
+    }
+
+    @Override
     public void logoutFtpServer() {
         if (channelSftp != null) {
             channelSftp.disconnect();
@@ -379,6 +389,7 @@ public class SftpHandler implements IFtpHandler {
     @Override
     //设置处理多个文件
     public boolean completePendingCommand(){
-        throw new RuntimeException("Not Support!");
+//        throw new RuntimeException("Not Support!");
+        return true;
     }
 }
