@@ -21,7 +21,6 @@ public class Name {
 
     public String firstName;
 
-    @JsonValue
     public List<SubField> lastNames;
 
     @JsonCreator

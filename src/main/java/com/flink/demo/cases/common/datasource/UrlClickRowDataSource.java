@@ -31,7 +31,7 @@ public class UrlClickRowDataSource extends RichParallelSourceFunction<Row> {
 
     public static String CLICK_FIELDS_WITH_ROWTIME = "userId,username,url,clickTime,rank_num,uuid,data_col,time_col";
 
-    public static TypeInformation USER_CLICK_TYPEINFO = Types.ROW(
+    public static TypeInformation<Row> USER_CLICK_TYPEINFO = Types.ROW(
             new String[]{"userId", "username", "url", "clickTime", "rank_num", "uuid", "data_col", "time_col"},
             new TypeInformation[]{
                     Types.INT(),

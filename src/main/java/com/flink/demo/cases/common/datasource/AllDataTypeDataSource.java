@@ -13,6 +13,7 @@ import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.UUID;
 
 public class AllDataTypeDataSource extends RichParallelSourceFunction<Row> {
 
@@ -24,39 +25,20 @@ public class AllDataTypeDataSource extends RichParallelSourceFunction<Row> {
             new String[]{
                     "int_col",
                     "string_col",
-                    "boolean_col",
-                    "byte_col",
-                    "timestamp_col",
-                    "date_col",
-                    "decimal_col",
-                    "double_col",
-                    "float_col",
-                    "long_col",
-                    "short_col",
-                    "binary_col",
-                    "null_col"
+                    "ts"
             },
             new TypeInformation[]{
                     Types.INT(),
                     Types.STRING(),
-                    Types.BOOLEAN(),
-                    Types.BYTE(),
-                    Types.SQL_TIMESTAMP(),
-                    Types.SQL_DATE(),
-                    Types.DECIMAL(),
-                    Types.DOUBLE(),
-                    Types.FLOAT(),
-                    Types.LONG(),
-                    Types.SHORT(),
-                    Types.PRIMITIVE_ARRAY(Types.BYTE()),
-                    Types.STRING()
+                    Types.SQL_TIMESTAMP()
             });
 
-    private final Row row = new Row(13);
+    private final Row row = new Row(3);
 
     @Override
     public void run(SourceContext<Row> ctx) throws Exception {
         Random random = new Random(System.currentTimeMillis());
+        int count = 0;
         while (running) {
             int indexOfThisSubtask = getRuntimeContext().getIndexOfThisSubtask();
             Thread.sleep((indexOfThisSubtask + 1) * 1000);
@@ -77,19 +59,13 @@ public class AllDataTypeDataSource extends RichParallelSourceFunction<Row> {
 
             row.setField(0, intColV);
             row.setField(1, stringColV);
-            row.setField(2, booleanColV);
-            row.setField(3, byteColV);
-            row.setField(4, timestampColV);
-            row.setField(5, dateColV);
-            row.setField(6, decimalColV);
-            row.setField(7, doubleColV);
-            row.setField(8, floatColV);
-            row.setField(9, longColV);
-            row.setField(10, shortCloV);
-            row.setField(11, binaryColV);
-            row.setField(12, null);
+            row.setField(2, timestampColV);
             logger.info("emit -> {}", row);
             ctx.collect(row);
+            count++;
+            if (count == 10) {
+//                running = false;
+            }
         }
     }
 
