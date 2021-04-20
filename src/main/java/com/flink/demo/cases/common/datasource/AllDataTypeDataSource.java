@@ -64,7 +64,7 @@ public class AllDataTypeDataSource extends RichParallelSourceFunction<Row> {
             ctx.collect(row);
             count++;
             if (count == 10) {
-//                running = false;
+                running = false;
             }
         }
     }

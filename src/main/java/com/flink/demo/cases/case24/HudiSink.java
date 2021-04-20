@@ -2,9 +2,7 @@ package com.flink.demo.cases.case24;
 
 import com.flink.demo.cases.common.datasource.AllDataTypeDataSource;
 import org.apache.avro.Schema;
-import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -12,17 +10,11 @@ import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.operators.KeyedProcessOperator;
 import org.apache.flink.types.Row;
-import org.apache.hudi.client.WriteStatus;
 import org.apache.hudi.common.model.HoodieRecord;
 import org.apache.hudi.configuration.FlinkOptions;
-import org.apache.hudi.sink.CommitSink;
-import org.apache.hudi.sink.KeyedWriteProcessFunction;
-import org.apache.hudi.sink.KeyedWriteProcessOperator;
 import org.apache.hudi.sink.StreamWriteOperatorFactory;
 import org.apache.hudi.sink.partitioner.BucketAssignFunction;
-import org.apache.hudi.streamer.FlinkStreamerConfig;
 
-import java.util.List;
 import java.util.Objects;
 
 public class HudiSink {
@@ -41,24 +33,13 @@ public class HudiSink {
 
         allDataTypeStream.printToErr("all_data_type_sink");
 
-        FlinkStreamerConfig conf = new FlinkStreamerConfig();
-        conf.targetBasePath = "file:///tmp/shiy/spark/flink-hudi-sink";
-        conf.readSchemaFilePath = Objects.requireNonNull(Thread.currentThread()
-                .getContextClassLoader().getResource("test_read_schema.avsc")).toString();
-        conf.targetTableName = "TestHoodieTable";
-        conf.partitionPathField = "int_col";
-        conf.tableType = "COPY_ON_WRITE";
-        conf.checkpointInterval = 4000L;
-
-//        conf.setString(FlinkOptions.PATH, "file:///tmp/shiy/spark/flink-hudi-sink");
-//        conf.setString(FlinkOptions.READ_AVRO_SCHEMA, schema.toString());
-//        conf.setString(FlinkOptions.TABLE_NAME, "TestHoodieTable");
-//        conf.setString(FlinkOptions.PARTITION_PATH_FIELD, "int_col");
-//        conf.setString(FlinkOptions.RECORD_KEY_FIELD, "int_col");
-//        conf.setDouble(FlinkOptions.WRITE_BATCH_SIZE, 0.001);
-
-        env.getConfig().setGlobalJobParameters(conf);
-
+        Configuration conf = new Configuration();
+        conf.setString(FlinkOptions.PATH, "file:///tmp/shiy/spark/flink-hudi-sink");
+        conf.setString(FlinkOptions.READ_AVRO_SCHEMA, schema.toString());
+        conf.setString(FlinkOptions.TABLE_NAME, "TestHoodieTable");
+        conf.setString(FlinkOptions.PARTITION_PATH_FIELD, "ts");
+        conf.setString(FlinkOptions.RECORD_KEY_FIELD, "int_col");
+        conf.setDouble(FlinkOptions.WRITE_BATCH_SIZE, 0.01);
         StreamWriteOperatorFactory<HoodieRecord> operatorFactory =
                 new StreamWriteOperatorFactory<>(conf);
 
@@ -74,18 +55,8 @@ public class HudiSink {
                 .uid("uid_bucket_assigner")
                 // shuffle by fileId(bucket id)
                 .keyBy(record -> record.getCurrentLocation().getFileId())
-                // write operator, where the write operation really happens
-                .transform(KeyedWriteProcessOperator.NAME, TypeInformation.of(new TypeHint<Tuple3<String, List<WriteStatus>, Integer>>() {
-                }), new KeyedWriteProcessOperator(new KeyedWriteProcessFunction()))
-                .name("write_process")
-                .uid("write_process_uid")
-                .setParallelism(4)
-
-                // Commit can only be executed once, so make it one parallelism
-                .addSink(new CommitSink())
-                .name("commit_sink")
-                .uid("commit_sink_uid")
-                .setParallelism(1);
+                .transform("hoodie_stream_write", null, operatorFactory)
+                .uid("uid_hoodie_stream_write");
 
         env.executeAsync("hudi sink training");
 
