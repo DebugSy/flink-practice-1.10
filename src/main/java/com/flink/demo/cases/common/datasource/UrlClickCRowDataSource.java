@@ -1,5 +1,7 @@
 package com.flink.demo.cases.common.datasource;
 
+import org.apache.flink.api.common.accumulators.IntCounter;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.table.runtime.types.CRow;
 import org.apache.flink.types.Row;
@@ -22,6 +24,13 @@ public class UrlClickCRowDataSource extends RichSourceFunction<CRow> {
 
     public static String CLICK_FIELDS_WITH_ROWTIME = "userId,username,url,clickTime.rowtime";
 
+    private IntCounter intCounter = new IntCounter();
+
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        getRuntimeContext().addAccumulator("cnt", intCounter);
+    }
+
     @Override
     public void run(SourceContext<CRow> ctx) throws Exception {
         Random random = new Random(System.currentTimeMillis());
@@ -40,6 +49,7 @@ public class UrlClickCRowDataSource extends RichSourceFunction<CRow> {
             logger.info("emit -> {}", row);
             CRow cRow = new CRow(row, true);
             ctx.collect(cRow);
+            intCounter.add(1);
         }
     }
 

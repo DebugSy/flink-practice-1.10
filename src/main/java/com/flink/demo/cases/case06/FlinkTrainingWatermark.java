@@ -1,6 +1,7 @@
 package com.flink.demo.cases.case06;
 
 import com.flink.demo.cases.common.datasource.OutOfOrderRowDataSource;
+import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -73,7 +74,9 @@ public class FlinkTrainingWatermark {
         aggregateTraining.printToErr();
 
 
-        env.execute("flink job demo");
+        JobExecutionResult result = env.execute("flink job demo");
+        Object cnt = result.getAccumulatorResult("cnt");
+        System.err.println("accumulator cnt = " + cnt);
     }
 
 }

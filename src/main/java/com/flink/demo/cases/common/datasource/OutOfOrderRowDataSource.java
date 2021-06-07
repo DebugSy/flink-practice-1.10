@@ -1,6 +1,8 @@
 package com.flink.demo.cases.common.datasource;
 
+import org.apache.flink.api.common.accumulators.IntCounter;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.table.api.Types;
 import org.apache.flink.types.Row;
@@ -36,6 +38,8 @@ public class OutOfOrderRowDataSource extends RichSourceFunction<Row> {
 
     private static List<List<String>> clicks = new ArrayList<>();
 
+    private IntCounter intCounter = new IntCounter();
+
     static {
         clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:29.876"));
         clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:30.851"));
@@ -64,6 +68,11 @@ public class OutOfOrderRowDataSource extends RichSourceFunction<Row> {
     }
 
     @Override
+    public void open(Configuration parameters) throws Exception {
+        getRuntimeContext().addAccumulator("cnt", this.intCounter);
+    }
+
+    @Override
     public void run(SourceContext<Row> sourceContext) throws Exception {
         Iterator<List<String>> iterator = clicks.iterator();
         while (iterator.hasNext()) {
@@ -75,7 +84,7 @@ public class OutOfOrderRowDataSource extends RichSourceFunction<Row> {
             row.setField(3, Timestamp.valueOf(record.get(3)));
             logger.info("emit {} -> {}", Timestamp.valueOf(record.get(3)).getTime(), row);
             sourceContext.collect(row);
-
+            intCounter.add(1);
             Thread.sleep(1000 * 1);
         }
     }

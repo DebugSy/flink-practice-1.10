@@ -21,7 +21,9 @@ public class OutOfOrderDataSource extends RichSourceFunction<Tuple4<Integer, Str
 
     private static final Logger logger = LoggerFactory.getLogger(OutOfOrderDataSource.class);
 
-    public static String CLICK_FIELDS = "userId,username,url,clickTime,rowtime.rowtime";
+    public static String CLICK_FIELDS = "userId,username,url,clickTime.rowtime";
+
+    public static String CLICK_FIELDS_NO_WATERMARK = "userId,username,url,clickTime";
 
     public static TypeInformation CLICK_TYPEINFO = Types.ROW(
             new String[]{"userId", "username", "url", "clickTime"},

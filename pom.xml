@@ -9,11 +9,10 @@
     <version>1.0</version>
 
     <properties>
-        <flink.version>1.11.3</flink.version>
+        <flink.version>1.10.1</flink.version>
         <hadoop.version>2.7.3</hadoop.version>
         <scala.version>2.11</scala.version>
         <hbase.version>1.1.2</hbase.version>
-        <hive.version>1.2.1</hive.version>
     </properties>
 
     <dependencies>
@@ -58,11 +57,6 @@
 
         <!-- flink connector -->
         <dependency>
-            <groupId>org.apache.bahir</groupId>
-            <artifactId>flink-connector-redis_${scala.version}</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-kafka-0.10_${scala.version}</artifactId>
             <version>${flink.version}</version>
@@ -79,25 +73,36 @@
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-jdbc_${scala.version}</artifactId>
+            <artifactId>flink-jdbc_${scala.version}</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+
+        <!-- flink format -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-csv</artifactId>
             <version>${flink.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-hive_${scala.version}</artifactId>
+            <artifactId>flink-json</artifactId>
             <version>${flink.version}</version>
         </dependency>
-
-        <!-- flink cep -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cep_${scala.version}</artifactId>
+            <artifactId>flink-parquet_2.11</artifactId>
             <version>${flink.version}</version>
         </dependency>
-
-
-
-
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>1.8.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.parquet</groupId>
+            <artifactId>parquet-avro</artifactId>
+            <version>1.10.0</version>
+        </dependency>
 
         <!-- flink elasticsearch -->
         <dependency>
@@ -112,6 +117,13 @@
             <version>${flink.version}</version>
         </dependency>
 
+        <!-- redis -->
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
         <!-- hadoop -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -122,11 +134,7 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
-                <exclusion>
-                    <artifactId>avro</artifactId>
-                    <groupId>org.apache.avro</groupId>
-                </exclusion>
-                <!--                <exclusion>-->
+<!--                <exclusion>-->
 <!--                    <artifactId>guava</artifactId>-->
 <!--                    <groupId>com.google.guava</groupId>-->
 <!--                </exclusion>-->
@@ -150,13 +158,6 @@
             <groupId>com.inforefiner.snowball</groupId>
             <artifactId>snowball-jdbc</artifactId>
             <version>0.1.41</version>
-        </dependency>
-
-        <!-- hudi -->
-        <dependency>
-            <groupId>org.apache.hudi</groupId>
-            <artifactId>hudi-flink-bundle_2.11</artifactId>
-            <version>0.8.0</version>
         </dependency>
 
         <!--HBase Dependency -->
@@ -220,12 +221,6 @@
             <version>1.7.25</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.51</version>
-        </dependency>
-
         <!-- lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -252,26 +247,6 @@
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>false</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
