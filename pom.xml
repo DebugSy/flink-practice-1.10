@@ -5,14 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>flink-practice-1.10</artifactId>
+    <artifactId>flink-practice-1.11</artifactId>
     <version>1.0</version>
 
     <properties>
-        <flink.version>1.11.3</flink.version>
+        <flink.version>1.11.2</flink.version>
         <hadoop.version>2.7.3</hadoop.version>
         <scala.version>2.11</scala.version>
-        <hbase.version>1.1.2</hbase.version>
+        <hbase.version>1.2.3</hbase.version>
         <hive.version>1.2.1</hive.version>
     </properties>
 
@@ -110,27 +110,6 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-metrics-prometheus_2.11</artifactId>
             <version>${flink.version}</version>
-        </dependency>
-
-        <!-- hadoop -->
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
-            <version>${hadoop.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>avro</artifactId>
-                    <groupId>org.apache.avro</groupId>
-                </exclusion>
-                <!--                <exclusion>-->
-<!--                    <artifactId>guava</artifactId>-->
-<!--                    <groupId>com.google.guava</groupId>-->
-<!--                </exclusion>-->
-            </exclusions>
         </dependency>
 
         <!-- ClickHouse Dependency -->

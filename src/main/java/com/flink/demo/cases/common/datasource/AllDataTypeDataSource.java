@@ -39,6 +39,7 @@ public class AllDataTypeDataSource extends RichParallelSourceFunction<Row> {
     public void run(SourceContext<Row> ctx) throws Exception {
         Random random = new Random(System.currentTimeMillis());
         int count = 0;
+        Thread.sleep(1000 * 5);
         while (running) {
             int indexOfThisSubtask = getRuntimeContext().getIndexOfThisSubtask();
             Thread.sleep((indexOfThisSubtask + 1) * 1000);
@@ -64,7 +65,7 @@ public class AllDataTypeDataSource extends RichParallelSourceFunction<Row> {
             ctx.collect(row);
             count++;
             if (count == 10) {
-                running = false;
+//                running = false;
             }
         }
     }

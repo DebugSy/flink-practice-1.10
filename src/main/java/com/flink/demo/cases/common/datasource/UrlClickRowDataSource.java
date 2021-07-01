@@ -1,13 +1,13 @@
 package com.flink.demo.cases.common.datasource;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.metrics.Counter;
 import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.streaming.api.watermark.Watermark;
-import org.apache.flink.table.api.Types;
 import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,20 +29,19 @@ public class UrlClickRowDataSource extends RichParallelSourceFunction<Row> {
 
     public static String CLICK_FIELDS = "userId,username,url,clickTime";
 
-    public static String CLICK_FIELDS_WITH_ROWTIME = "userId,username,url,clickTime,rank_num,uuid,data_col,time_col";
+    public static String CLICK_FIELDS_WITH_ROWTIME = "userId,username,url,clickTime.rowtime,rank_num,uuid,data_col,time_col";
 
-    public static TypeInformation<Row> USER_CLICK_TYPEINFO = Types.ROW(
+    public static TypeInformation<Row> USER_CLICK_TYPEINFO = Types.ROW_NAMED(
             new String[]{"userId", "username", "url", "clickTime", "rank_num", "uuid", "data_col", "time_col"},
-            new TypeInformation[]{
-                    Types.INT(),
-                    Types.STRING(),
-                    Types.STRING(),
-                    Types.SQL_TIMESTAMP(),
-                    Types.INT(),
-                    Types.STRING(),
-                    Types.STRING(),
-                    Types.STRING()
-            });
+            Types.INT,
+            Types.STRING,
+            Types.STRING,
+            Types.SQL_TIMESTAMP,
+            Types.INT,
+            Types.STRING,
+            Types.STRING,
+            Types.STRING
+    );
 
     public static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
     public static SimpleDateFormat timeFormat = new SimpleDateFormat("HHmmss");
