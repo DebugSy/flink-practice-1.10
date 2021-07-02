@@ -1,8 +1,10 @@
 package com.flink.demo.cases.common.datasource;
 
+import com.google.common.util.concurrent.RateLimiter;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.common.typeinfo.Types;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
-import org.apache.flink.table.api.Types;
 import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +15,6 @@ import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Random;
-import java.util.UUID;
 
 public class AllDataTypeDataSource extends RichParallelSourceFunction<Row> {
 
@@ -21,29 +22,51 @@ public class AllDataTypeDataSource extends RichParallelSourceFunction<Row> {
 
     private volatile boolean running = true;
 
-    public static TypeInformation<Row> allDataTypeInfo = Types.ROW(
+    public static TypeInformation<Row> allDataTypeInfo = Types.ROW_NAMED(
             new String[]{
                     "int_col",
                     "string_col",
-                    "ts"
+                    "boolean_col",
+                    "byte_col",
+                    "timestamp_col",
+                    "date_col",
+                    "decimal_col",
+                    "double_col",
+                    "float_col",
+                    "long_col",
+                    "short_col",
+                    "binary_col",
+                    "null_col"
             },
-            new TypeInformation[]{
-                    Types.INT(),
-                    Types.STRING(),
-                    Types.SQL_TIMESTAMP()
-            });
+            Types.INT,
+            Types.STRING,
+            Types.BOOLEAN,
+            Types.BYTE,
+            Types.SQL_TIMESTAMP,
+            Types.SQL_DATE,
+            Types.BIG_DEC,
+            Types.DOUBLE,
+            Types.FLOAT,
+            Types.LONG,
+            Types.SHORT,
+            Types.PRIMITIVE_ARRAY(Types.BYTE),
+            Types.STRING);
 
-    private final Row row = new Row(3);
+    private final Row row = new Row(13);
+
+    private transient RateLimiter rateLimiter;
+    private double generateDataRate = 1.0;//每秒生成的数据条数
+
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        this.rateLimiter = RateLimiter.create(generateDataRate);
+    }
 
     @Override
     public void run(SourceContext<Row> ctx) throws Exception {
         Random random = new Random(System.currentTimeMillis());
-        int count = 0;
-        Thread.sleep(1000 * 5);
         while (running) {
-            int indexOfThisSubtask = getRuntimeContext().getIndexOfThisSubtask();
-            Thread.sleep((indexOfThisSubtask + 1) * 1000);
-
+            rateLimiter.acquire();
             int intColV = random.nextInt(10000);
             String stringColV = "string_col_value_" + intColV;
             boolean booleanColV = random.nextBoolean();
@@ -60,13 +83,19 @@ public class AllDataTypeDataSource extends RichParallelSourceFunction<Row> {
 
             row.setField(0, intColV);
             row.setField(1, stringColV);
-            row.setField(2, timestampColV);
-            logger.info("emit -> {}", row);
+            row.setField(2, booleanColV);
+            row.setField(3, byteColV);
+            row.setField(4, timestampColV);
+            row.setField(5, dateColV);
+            row.setField(6, decimalColV);
+            row.setField(7, doubleColV);
+            row.setField(8, floatColV);
+            row.setField(9, longColV);
+            row.setField(10, shortCloV);
+            row.setField(11, binaryColV);
+            row.setField(12, null);
+//            logger.info("emit -> {}", row);
             ctx.collect(row);
-            count++;
-            if (count == 10) {
-//                running = false;
-            }
         }
     }
 
@@ -77,8 +106,9 @@ public class AllDataTypeDataSource extends RichParallelSourceFunction<Row> {
 
     /**
      * 生成bigDecimal类型
+     *
      * @param number 数值
-     * @param scale 小数位数
+     * @param scale  小数位数
      * @return
      */
     private BigDecimal generateDecimal(double number, int scale) {
