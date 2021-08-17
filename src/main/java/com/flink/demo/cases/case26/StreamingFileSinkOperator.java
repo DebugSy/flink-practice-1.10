@@ -24,8 +24,6 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
 
     private final long bucketCheckInterval;
 
-    private BucketLifeCycleListener bucketLifeCycleListener;
-
     private final StreamingFileSink.BucketsBuilder<IN, BucketId, ? extends StreamingFileSink.BucketsBuilder<IN, BucketId, ?>> bucketsBuilder;
 
     // --------------------------- runtime fields -----------------------------
@@ -50,22 +48,6 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
 
         this.bucketsBuilder = Preconditions.checkNotNull(bucketsBuilder);
         this.bucketCheckInterval = bucketCheckInterval;
-    }
-
-    /**
-     * Creates a new {@code StreamingFileSink} that writes files to the given base directory
-     * with the give buckets properties.
-     */
-    public StreamingFileSinkOperator(
-            StreamingFileSink.BucketsBuilder<IN, BucketId, ? extends StreamingFileSink.BucketsBuilder<IN, BucketId, ?>> bucketsBuilder,
-            long bucketCheckInterval,
-            BucketLifeCycleListener bucketLifeCycleListener) {
-
-        Preconditions.checkArgument(bucketCheckInterval > 0L);
-
-        this.bucketsBuilder = Preconditions.checkNotNull(bucketsBuilder);
-        this.bucketCheckInterval = bucketCheckInterval;
-        this.bucketLifeCycleListener = bucketLifeCycleListener;
     }
 
     // --------------------------- Sink Methods -----------------------------
@@ -94,7 +76,6 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
                 output.collect(new StreamRecord<>(bucketMessage));
             }
         });
-        buckets.setNumberOfTasks(getRuntimeContext().getNumberOfParallelSubtasks());
         this.helper = new StreamingFileSinkHelper<>(
                 buckets,
                 context.isRestored(),

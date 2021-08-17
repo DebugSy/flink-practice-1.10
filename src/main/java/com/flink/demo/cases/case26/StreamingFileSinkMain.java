@@ -1,13 +1,11 @@
 package com.flink.demo.cases.case26;
 
-import com.flink.demo.cases.case08.BucketListener;
 import com.flink.demo.cases.case08.EventTimeBucketAssigner;
 import com.flink.demo.cases.common.datasource.UrlClickRowDataSource;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.serialization.SimpleStringEncoder;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
-import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -52,15 +50,11 @@ public class StreamingFileSinkMain {
                         .withMaxPartSize(1024 * 1024 * 1024)
                         .build())
                 .withBucketAssigner(eventTimeBucketAssigner)
-                .withBucketCheckInterval(1000 * 5)
-                .withBucketLifeCycleListener(new BucketListener());
-
-        BucketListener<Row, String> bucketListener = new BucketListener<>();
+                .withBucketCheckInterval(1000 * 5);
 
         StreamingFileSinkOperator<Row, String> sinkOperator = new StreamingFileSinkOperator<>(
                 bucketBuilder,
-                bucketBuilder.getBucketCheckInterval(),
-                bucketListener);
+                bucketBuilder.getBucketCheckInterval());
 
         // sink to hdfs and emit bucket inactive message
         SingleOutputStreamOperator writerStream = watermarks.transform(

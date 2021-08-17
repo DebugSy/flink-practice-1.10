@@ -43,6 +43,5 @@
     <logger name="com.flink.demo.cases.case19.HBaseSpilloverHDFSSinkFunction" level="DEBUG"/>
     <logger name="com.flink.demo.cases.case23.bucketing.BucketingSink" level="DEBUG"/>
     <logger name="org.apache.flink.streaming.connectors.fs.bucketing.BucketingSink" level="DEBUG"/>
-    <logger name="com.flink.demo.cases.case08.BucketListener" level="DEBUG"/>
     <logger name="com.flink.demo.cases.case26.StreamingFileBucketCommitter" level="DEBUG"/>
 </configuration>
