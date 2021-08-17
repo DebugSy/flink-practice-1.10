@@ -19,7 +19,7 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{0} %X{sourceThread} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{0} %X{sourceThread} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -43,4 +43,6 @@
     <logger name="com.flink.demo.cases.case19.HBaseSpilloverHDFSSinkFunction" level="DEBUG"/>
     <logger name="com.flink.demo.cases.case23.bucketing.BucketingSink" level="DEBUG"/>
     <logger name="org.apache.flink.streaming.connectors.fs.bucketing.BucketingSink" level="DEBUG"/>
+    <logger name="com.flink.demo.cases.case08.BucketListener" level="DEBUG"/>
+    <logger name="com.flink.demo.cases.case26.StreamingFileBucketCommitter" level="DEBUG"/>
 </configuration>

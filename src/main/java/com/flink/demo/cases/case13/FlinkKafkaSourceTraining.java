@@ -1,26 +1,16 @@
 package com.flink.demo.cases.case13;
 
-import com.flink.demo.cases.case10.finalState.FinalStateTriggerWindow;
-import com.flink.demo.cases.common.datasource.UrlClickCRowDataSource;
-import com.flink.demo.cases.common.datasource.UrlClickFinalStateRowDataSource;
 import com.flink.demo.cases.common.datasource.UrlClickRowDataSource;
 import com.flink.demo.cases.common.utils.ClassUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.functions.RichMapFunction;
-import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.streaming.api.TimeCharacteristic;
-import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
-import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010;
 import org.apache.flink.types.Row;
 
-import javax.annotation.Nullable;
-import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.Properties;
 
 /**
@@ -42,13 +32,14 @@ public class FlinkKafkaSourceTraining {
         props.setProperty("bootstrap.servers", "192.168.1.82:9094");
         props.setProperty("group.id", "idea_local_test");
         FlinkKafkaConsumer010<String> kafkaConsumer010 =
-                new FlinkKafkaConsumer010<>("shiy.flink.url.click", new SimpleStringSchema(), props);
+                new FlinkKafkaConsumer010<>("shiy.flink.url.click", new LimitDeserializationSchema(), props);
 
 //        kafkaConsumer010.setStartFromEarliest();
-        kafkaConsumer010.setStartFromTimestamp(1600789914000L);
+//        kafkaConsumer010.setStartFromTimestamp(1600789914000L);
 
 
         SingleOutputStreamOperator<Row> urlClickSource = env.addSource(kafkaConsumer010)
+                .setParallelism(2)
                 .map(new RichMapFunction<String, Row>() {
 
                     int counter = 0;
@@ -64,6 +55,9 @@ public class FlinkKafkaSourceTraining {
                             row.setField(i, convert);
                         }
                         log.info("counter {}, consume message {}", counter++, row);
+                        if (counter > 5) {
+                            kafkaConsumer010.close();
+                        }
                         return row;
                     }
                 })
