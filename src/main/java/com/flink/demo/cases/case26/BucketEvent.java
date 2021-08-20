@@ -15,7 +15,7 @@ import java.io.Serializable;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class BucketMessage<BucketId> implements Serializable {
+public class BucketEvent<BucketId> implements Serializable {
 
     public BucketId bucketId;
     public int taskId;

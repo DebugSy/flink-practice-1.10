@@ -13,7 +13,7 @@ public class CommonsMathTest {
         Percentile percentilesImpl = new Percentile().withNaNStrategy(NaNStrategy.FIXED);
         percentilesImpl.setData(values);
         double evaluate = percentilesImpl.evaluate(50);
-        System.out.println(evaluate);
+        assert evaluate == 3;
     }
 
 }

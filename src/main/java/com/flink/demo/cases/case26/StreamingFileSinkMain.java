@@ -37,8 +37,6 @@ public class StreamingFileSinkMain {
             }
         });
 
-        watermarks.printToErr();
-
         EventTimeBucketAssigner eventTimeBucketAssigner = new EventTimeBucketAssigner("yyyyMMddHHmm", ZoneId.systemDefault());
 
         Path path = new Path("E://tmp/shiy/flink/streamingfilesink");
@@ -59,11 +57,16 @@ public class StreamingFileSinkMain {
         // sink to hdfs and emit bucket inactive message
         SingleOutputStreamOperator writerStream = watermarks.transform(
                 "StreamingFileSink",
-                TypeInformation.of(BucketMessage.class),
-                sinkOperator).setParallelism(10);
+                TypeInformation.of(BucketEvent.class),
+                sinkOperator).setParallelism(5);
 
         // collect bucket inactive message notify the register listener
-        StreamingFileBucketCommitter<String> committer = new StreamingFileBucketCommitter<>();
+        StreamingFileBucketCommitter<String> committer = new StreamingFileBucketCommitter<>(new BucketListener<String>() {
+            @Override
+            public void notifyBucketInactive(BucketInfo<String> bucketInfo) {
+                System.err.println(String.format("bucket inactive: %s", bucketInfo));
+            }
+        });
         writerStream.transform("StreamingFileSinkCommitter", Types.VOID, committer)
                 .setParallelism(1)
                 .setMaxParallelism(1);

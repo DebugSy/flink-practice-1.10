@@ -17,8 +17,8 @@ import org.apache.flink.util.Preconditions;
  * @param <IN>       输入数据类型
  * @param <BucketId> BucketId类型
  */
-public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOperator<BucketMessage>
-        implements OneInputStreamOperator<IN, BucketMessage> {
+public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOperator<BucketEvent>
+        implements OneInputStreamOperator<IN, BucketEvent> {
 
     // ------------------------ configuration fields --------------------------
 
@@ -67,13 +67,13 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
 
             @Override
             public void bucketInactive(Bucket<IN, BucketId> bucket) {
-                BucketMessage bucketMessage = new BucketMessage(
+                BucketEvent bucketEvent = new BucketEvent(
                         bucket.getBucketId(),
                         getRuntimeContext().getIndexOfThisSubtask(),
                         getRuntimeContext().getNumberOfParallelSubtasks(),
                         bucket.getRecords(),
                         bucket.getBucketPath());
-                output.collect(new StreamRecord<>(bucketMessage));
+                output.collect(new StreamRecord<>(bucketEvent));
             }
         });
         this.helper = new StreamingFileSinkHelper<>(
