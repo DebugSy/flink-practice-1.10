@@ -32,7 +32,7 @@ public class UrlClickRowDataSource extends RichParallelSourceFunction<Row> {
     public static String CLICK_FIELDS_WITH_ROWTIME = "userId,username,url,clickTime.rowtime,rank_num,uuid,data_col,time_col";
 
     public static TypeInformation<Row> USER_CLICK_TYPEINFO = Types.ROW_NAMED(
-            new String[]{"userId", "username", "url", "clickTime", "rank_num", "uuid", "data_col", "time_col"},
+            new String[]{"userId", "username", "url", "clickTime", "rank_num", "uuid", "date_col", "time_col"},
             Types.INT,
             Types.STRING,
             Types.STRING,
@@ -44,7 +44,7 @@ public class UrlClickRowDataSource extends RichParallelSourceFunction<Row> {
     );
 
     public static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-    public static SimpleDateFormat timeFormat = new SimpleDateFormat("HHmmss");
+    public static SimpleDateFormat timeFormat = new SimpleDateFormat("yyyyMMddHHmm");
 
     /*
      * metrics
@@ -103,7 +103,7 @@ public class UrlClickRowDataSource extends RichParallelSourceFunction<Row> {
         row.setField(3, clickTime);
         row.setField(4, rank);
         row.setField(5, uuid);
-        row.setField(6, null);
+        row.setField(6, dateStr);
         row.setField(7, timeStr);
         return row;
     }

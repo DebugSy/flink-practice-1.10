@@ -44,4 +44,6 @@
     <logger name="com.flink.demo.cases.case23.bucketing.BucketingSink" level="DEBUG"/>
     <logger name="org.apache.flink.streaming.connectors.fs.bucketing.BucketingSink" level="DEBUG"/>
     <logger name="com.flink.demo.cases.case26.StreamingFileBucketCommitter" level="DEBUG"/>
+    <logger name="org.apache.flink.streaming.api.operators.AbstractStreamOperator" level="DEBUG"/>
+    <logger name="org.apache.flink.streaming.api.functions.sink.filesystem.Bucket" level="DEBUG"/>
 </configuration>

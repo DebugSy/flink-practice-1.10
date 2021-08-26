@@ -11,6 +11,9 @@ import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
 import org.apache.flink.streaming.runtime.tasks.ProcessingTimeService;
 import org.apache.flink.util.Preconditions;
 
+import java.util.*;
+import java.util.function.BiFunction;
+
 /**
  * StreamingFileSink的扩展,实现bucket关闭时,发出通知的功能
  *
@@ -24,6 +27,8 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
 
     private final long bucketCheckInterval;
 
+    private final long bucketTimeout;
+
     private final StreamingFileSink.BucketsBuilder<IN, BucketId, ? extends StreamingFileSink.BucketsBuilder<IN, BucketId, ?>> bucketsBuilder;
 
     // --------------------------- runtime fields -----------------------------
@@ -35,6 +40,9 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
      */
     private long currentWatermark = Long.MIN_VALUE;
 
+    private transient Map<BucketId, BucketEvent> inactiveBuckets;
+    private transient Map<BucketId, Long> bucketCreationTime;
+
 
     /**
      * Creates a new {@code StreamingFileSink} that writes files to the given base directory
@@ -42,12 +50,14 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
      */
     public StreamingFileSinkOperator(
             StreamingFileSink.BucketsBuilder<IN, BucketId, ? extends StreamingFileSink.BucketsBuilder<IN, BucketId, ?>> bucketsBuilder,
-            long bucketCheckInterval) {
+            long bucketCheckInterval,
+            long bucketTimeout) {
 
         Preconditions.checkArgument(bucketCheckInterval > 0L);
 
         this.bucketsBuilder = Preconditions.checkNotNull(bucketsBuilder);
         this.bucketCheckInterval = bucketCheckInterval;
+        this.bucketTimeout = bucketTimeout;
     }
 
     // --------------------------- Sink Methods -----------------------------
@@ -58,22 +68,35 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
 
 
         // Set listener before the initialization of Buckets.
+        inactiveBuckets = new HashMap<>();
+        bucketCreationTime = new HashMap<>();
         buckets.setBucketLifeCycleListener(new BucketLifeCycleListener<IN, BucketId>() {
 
             @Override
             public void bucketCreated(Bucket<IN, BucketId> bucket) {
-
+                BucketId bucketId = bucket.getBucketId();
+                LOG.debug("Bucket {} is created", bucketId);
+                bucketCreationTime.computeIfAbsent(bucketId, v -> System.currentTimeMillis());
             }
 
             @Override
             public void bucketInactive(Bucket<IN, BucketId> bucket) {
+                BucketId bucketId = bucket.getBucketId();
                 BucketEvent bucketEvent = new BucketEvent(
-                        bucket.getBucketId(),
+                        bucketId,
                         getRuntimeContext().getIndexOfThisSubtask(),
                         getRuntimeContext().getNumberOfParallelSubtasks(),
                         bucket.getRecords(),
-                        bucket.getBucketPath());
-                output.collect(new StreamRecord<>(bucketEvent));
+                        bucket.getBucketPath().getPath());
+                LOG.debug("Bucket {} is already inactive.", bucketEvent);
+                inactiveBuckets.compute(bucketId, (k, v) -> {
+                    if (v == null) {
+                        return bucketEvent;
+                    } else {
+                        bucketEvent.records += v.records;
+                        return bucketEvent;
+                    }
+                });
             }
         });
         this.helper = new StreamingFileSinkHelper<>(
@@ -88,6 +111,17 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
     @Override
     public void notifyCheckpointComplete(long checkpointId) throws Exception {
         this.helper.commitUpToCheckpoint(checkpointId);
+        Iterator<BucketId> iterator = inactiveBuckets.keySet().iterator();
+        while (iterator.hasNext()) {
+            BucketId bucketId = iterator.next();
+            Long creationTime = bucketCreationTime.get(bucketId);
+            if (bucketTimeout <= System.currentTimeMillis() - creationTime) {
+                BucketEvent bucketEvent = inactiveBuckets.get(bucketId);
+                LOG.debug("Emit bucket event {}", bucketEvent);
+                output.collect(new StreamRecord<>(bucketEvent));
+                inactiveBuckets.remove(bucketId);
+            }
+        }
     }
 
     @Override

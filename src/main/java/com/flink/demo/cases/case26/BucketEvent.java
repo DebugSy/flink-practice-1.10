@@ -4,7 +4,6 @@ package com.flink.demo.cases.case26;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.apache.flink.core.fs.Path;
 
 import java.io.Serializable;
 
@@ -21,5 +20,5 @@ public class BucketEvent<BucketId> implements Serializable {
     public int taskId;
     public int numberOfTasks;
     public long records;
-    public Path path;
+    public String path;
 }

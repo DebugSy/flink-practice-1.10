@@ -43,22 +43,23 @@ public class StreamingFileSinkMain {
         StreamingFileSink.DefaultRowFormatBuilder bucketBuilder = StreamingFileSink
                 .forRowFormat(path, new SimpleStringEncoder<Row>())
                 .withRollingPolicy(DefaultRollingPolicy.builder()
-                        .withRolloverInterval(TimeUnit.MINUTES.toMillis(1))
-                        .withInactivityInterval(TimeUnit.SECONDS.toMillis(30))
+                        .withRolloverInterval(TimeUnit.SECONDS.toMillis(10))
+                        .withInactivityInterval(TimeUnit.SECONDS.toMillis(10))
                         .withMaxPartSize(1024 * 1024 * 1024)
                         .build())
                 .withBucketAssigner(eventTimeBucketAssigner)
-                .withBucketCheckInterval(1000 * 5);
+                .withBucketCheckInterval(1000 * 3);
 
         StreamingFileSinkOperator<Row, String> sinkOperator = new StreamingFileSinkOperator<>(
                 bucketBuilder,
-                bucketBuilder.getBucketCheckInterval());
+                bucketBuilder.getBucketCheckInterval(),
+                TimeUnit.SECONDS.toMillis(60));
 
         // sink to hdfs and emit bucket inactive message
         SingleOutputStreamOperator writerStream = watermarks.transform(
                 "StreamingFileSink",
                 TypeInformation.of(BucketEvent.class),
-                sinkOperator).setParallelism(5);
+                sinkOperator).setParallelism(1);
 
         // collect bucket inactive message notify the register listener
         StreamingFileBucketCommitter<String> committer = new StreamingFileBucketCommitter<>(new BucketListener<String>() {

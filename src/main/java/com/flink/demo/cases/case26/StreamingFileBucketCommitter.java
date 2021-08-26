@@ -64,6 +64,7 @@ public class StreamingFileBucketCommitter<BucketId> extends AbstractStreamOperat
     @Override
     public void processElement(StreamRecord<BucketEvent<BucketId>> element) throws Exception {
         BucketEvent<BucketId> message = element.getValue();
+        log.debug("Received bucket event {}", message);
         bucketEvents.add(message);
         if (bucketTracker == null) {
             bucketTracker = new BucketTracker(message.numberOfTasks);
@@ -80,7 +81,7 @@ public class StreamingFileBucketCommitter<BucketId> extends AbstractStreamOperat
                 }
             }
             // TODO notify listener
-            Path bucketPath = new Path(message.path.getPath());
+            Path bucketPath = new Path(message.path);
             ContentSummary contentSummary = fileSystem.getContentSummary(bucketPath);
             long bucketFileLength = contentSummary.getLength();
             long bucketFileCount = contentSummary.getFileCount();

@@ -3,7 +3,6 @@ package com.flink.demo.cases.case26;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.flink.core.fs.Path;
 
 @Data
 @NoArgsConstructor
@@ -12,7 +11,7 @@ public class BucketInfo<BucketId> {
 
     private BucketId bucketId;
 
-    private Path path;
+    private String path;
 
     private long records;
 
