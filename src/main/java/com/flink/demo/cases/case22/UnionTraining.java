@@ -18,18 +18,17 @@ public class UnionTraining {
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         env.setParallelism(2);
 
-        SingleOutputStreamOperator<Row> urlClickSource = env.addSource(new UrlClickRowDataSource())
+        SingleOutputStreamOperator<Row> urlClickSource1 = env.addSource(new UrlClickRowDataSource())
                 .returns(UrlClickRowDataSource.USER_CLICK_TYPEINFO)
                 .setParallelism(1);
 
-        SingleOutputStreamOperator<Row> result = urlClickSource.flatMap(new FlatMapFunction<Row, Row>() {
-            @Override
-            public void flatMap(Row value, Collector<Row> out) throws Exception {
+        SingleOutputStreamOperator<Row> urlClickSource2 = env.addSource(new UrlClickRowDataSource())
+                .returns(UrlClickRowDataSource.USER_CLICK_TYPEINFO)
+                .setParallelism(1);
 
-            }
-        });
+        DataStream unionStream = urlClickSource1.union(urlClickSource2);
 
-        result.addSink(new SinkFunction() {
+        unionStream.addSink(new SinkFunction() {
             @Override
             public void invoke(Object value, Context context) throws Exception {
                 System.err.println("print " + value);

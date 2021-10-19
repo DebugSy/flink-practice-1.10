@@ -1,4 +1,4 @@
-package com.flink.demo.cases.case21;
+package com.flink.demo.cases.case16;
 
 import com.flink.demo.cases.common.datasource.FileUrlClickRowDataSource;
 import com.flink.demo.cases.common.datasource.FileUserRowDataSource;

@@ -27,7 +27,7 @@ import java.sql.Timestamp;
 /**
  *
  */
-public class CoGroupProcessFunctionTraining {
+public class ConnectProcessFunctionTraining {
 
     public static void main(String[] args) throws Exception {
 
