@@ -27,7 +27,7 @@ public class UrlClickRowDataSource extends RichParallelSourceFunction<Row> {
 
     private volatile boolean running = true;
 
-    public static String CLICK_FIELDS = "userId,username,url,clickTime";
+    public static String CLICK_FIELDS = "userId,username,url,clickTime,rank_num,uuid,data_col,time_col";
 
     public static String CLICK_FIELDS_WITH_ROWTIME = "userId,username,url,clickTime.rowtime,rank_num,uuid,data_col,time_col";
 
