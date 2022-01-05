@@ -27,12 +27,12 @@ import java.util.List;
 public class FlinkTrainingAggregateFuncCodegen {
 
     private static String hopWindowSql = "select username, count(*) as cnt, " +
-            "HOP_ROWTIME(rowtime, INTERVAL '5' SECOND, INTERVAL '10' SECOND) as window_rowtime, " +
-            "HOP_START(rowtime, INTERVAL '5' SECOND, INTERVAL '10' SECOND) as window_start, " +
-            "HOP_END(rowtime, INTERVAL '5' SECOND, INTERVAL '10' SECOND) as window_end " +
+            "HOP_ROWTIME(clickTime, INTERVAL '5' SECOND, INTERVAL '10' SECOND) as window_rowtime, " +
+            "HOP_START(clickTime, INTERVAL '5' SECOND, INTERVAL '10' SECOND) as window_start, " +
+            "HOP_END(clickTime, INTERVAL '5' SECOND, INTERVAL '10' SECOND) as window_end " +
             "from clicks " +
             "group by username, " +
-            "HOP(rowtime, INTERVAL '5' SECOND, INTERVAL '10' SECOND)";
+            "HOP(clickTime, INTERVAL '5' SECOND, INTERVAL '10' SECOND)";
 
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -54,7 +54,7 @@ public class FlinkTrainingAggregateFuncCodegen {
             }
         });
 
-        tEnv.createTemporaryView("clicks", streamSourceWithWatermarks, OutOfOrderDataSource.CLICK_FIELDS);
+        tEnv.createTemporaryView("clicks", streamSourceWithWatermarks, UrlClickRowDataSource.CLICK_FIELDS_WITH_ROWTIME);
 
 
         Planner planner = ((StreamTableEnvironmentImpl) tEnv).getPlanner();
