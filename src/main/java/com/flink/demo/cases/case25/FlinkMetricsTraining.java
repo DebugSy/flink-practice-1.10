@@ -14,12 +14,12 @@ public class FlinkMetricsTraining {
     public static void main(String[] args) throws Exception {
         Configuration configuration = new Configuration();
         //prometheus
-        configuration.setString("metrics.reporter.promgateway.class", "org.apache.flink.metrics.prometheus.PrometheusPushGatewayReporter");
-        configuration.setString("metrics.reporter.promgateway.host", "192.168.1.17");
-        configuration.setString("metrics.reporter.promgateway.port", "9091");
-        configuration.setString("metrics.reporter.promgateway.jobName", "flink_metrics_");
-        configuration.setString("metrics.reporter.promgateway.randomJobNameSuffix", "true");
-        configuration.setString("metrics.reporter.promgateway.deleteOnShutdown", "true");
+//        configuration.setString("metrics.reporter.promgateway.class", "org.apache.flink.metrics.prometheus.PrometheusPushGatewayReporter");
+//        configuration.setString("metrics.reporter.promgateway.host", "192.168.1.17");
+//        configuration.setString("metrics.reporter.promgateway.port", "9091");
+//        configuration.setString("metrics.reporter.promgateway.jobName", "flink_metrics_");
+//        configuration.setString("metrics.reporter.promgateway.randomJobNameSuffix", "true");
+//        configuration.setString("metrics.reporter.promgateway.deleteOnShutdown", "true");
 
         LocalStreamEnvironment env = StreamExecutionEnvironment.createLocalEnvironment(1, configuration);
         env.setParallelism(1);
@@ -52,6 +52,8 @@ public class FlinkMetricsTraining {
                 .name("Histogram Training")
                 .returns(rowTypeInfo)
                 .setParallelism(2);
+
+        result.print("result");
 
         env.execute("Flink Metrics training");
     }

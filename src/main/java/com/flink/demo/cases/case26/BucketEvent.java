@@ -21,4 +21,5 @@ public class BucketEvent<BucketId> implements Serializable {
     public int numberOfTasks;
     public long records;
     public String path;
+    public long createTime;
 }

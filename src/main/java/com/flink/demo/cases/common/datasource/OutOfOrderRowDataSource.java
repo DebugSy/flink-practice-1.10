@@ -37,30 +37,30 @@ public class OutOfOrderRowDataSource extends RichSourceFunction<Row> {
     private static List<List<String>> clicks = new ArrayList<>();
 
     static {
-        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:29.876"));
-        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:30.851"));
-        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/J", "2019-07-23 23:27:31.840"));
-        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:31.841"));
-        clicks.add(Arrays.asList("69", "用户E", "http://127.0.0.1/api/H", "2019-07-23 23:27:31.893"));
-        clicks.add(Arrays.asList("67", "用户C", "http://127.0.0.1/api/I", "2019-07-23 23:27:32.897"));
-        clicks.add(Arrays.asList("69", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:25.000"));//晚到数据
-        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:32.901"));
-        clicks.add(Arrays.asList("66", "用户B", "http://127.0.0.1/api/H", "2019-07-23 23:27:36.908"));
-        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:36.915"));
-        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/J", "2019-07-23 23:27:24.019"));//晚到数据
-        clicks.add(Arrays.asList("69", "用户E", "http://127.0.0.1/api/J", "2019-07-23 23:27:38.916"));
-        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/J", "2019-07-23 23:27:27.189"));//晚到数据
-        clicks.add(Arrays.asList("66", "用户B", "http://127.0.0.1/api/J", "2019-07-23 23:27:48.950"));
-        clicks.add(Arrays.asList("69", "用户E", "http://127.0.0.1/api/K", "2019-07-23 23:27:53.960"));
-        clicks.add(Arrays.asList("67", "用户C", "http://127.0.0.1/api/J", "2019-07-23 23:28:02.990"));
-        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/K", "2019-07-23 23:27:30.960"));//晚到数据
-        clicks.add(Arrays.asList("69", "用户E", "http://127.0.0.1/api/K", "2019-07-23 23:28:08.012"));
-        clicks.add(Arrays.asList("66", "用户B", "http://127.0.0.1/api/K", "2019-07-23 23:28:12.029"));
-        clicks.add(Arrays.asList("69", "用户E", "http://127.0.0.1/api/I", "2019-07-23 23:27:39.918"));//晚到数据
-        clicks.add(Arrays.asList("67", "用户C", "http://127.0.0.1/api/K", "2019-07-23 23:27:43.931"));//晚到数据
-        clicks.add(Arrays.asList("66", "用户B", "http://127.0.0.1/api/K", "2019-07-23 23:28:20.000"));
-        clicks.add(Arrays.asList("67", "用户C", "http://127.0.0.1/api/K", "2019-07-23 23:28:20.001"));
-        clicks.add(Arrays.asList("67", "用户C", "http://127.0.0.1/api/O", "2019-07-23 23:28:20.581"));
+        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:29.876", "88", "abcdefg", "20210830", "2021-08-22"));
+        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:30.851", "88", "abcdefg", "20210830", "2021-08-22"));
+        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/J", "2019-07-23 23:27:31.840", "88", "abcdefg", "20210830", "2021-08-22"));
+        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:31.841", "88", "abcdefg", "20210830", "2021-08-20"));
+        clicks.add(Arrays.asList("69", "用户E", "http://127.0.0.1/api/H", "2019-07-23 23:27:31.893", "88", "abcdefg", "20210830", "2021-08-20"));
+        clicks.add(Arrays.asList("67", "用户C", "http://127.0.0.1/api/I", "2019-07-23 23:27:32.897", "88", "abcdefg", "20210830", "2021-08-20"));
+        clicks.add(Arrays.asList("69", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:25.000", "88", "abcdefg", "20210830", "2021-08-20"));//晚到数据
+        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:32.901", "88", "abcdefg", "20210830", "2021-08-25"));
+        clicks.add(Arrays.asList("66", "用户B", "http://127.0.0.1/api/H", "2019-07-23 23:27:36.908", "88", "abcdefg", "20210830", "2021-08-25"));
+        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/I", "2019-07-23 23:27:36.915", "88", "abcdefg", "20210830", "2021-08-25"));
+        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/J", "2019-07-23 23:27:24.019", "88", "abcdefg", "20210830", "2021-08-25"));//晚到数据
+        clicks.add(Arrays.asList("69", "用户E", "http://127.0.0.1/api/J", "2019-07-23 23:27:38.916", "88", "abcdefg", "20210830", "2021-08-24"));
+        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/J", "2019-07-23 23:27:27.189", "88", "abcdefg", "20210830", "2021-08-24"));//晚到数据
+        clicks.add(Arrays.asList("66", "用户B", "http://127.0.0.1/api/J", "2019-07-23 23:27:48.950", "88", "abcdefg", "20210830", "2021-08-20"));
+        clicks.add(Arrays.asList("69", "用户E", "http://127.0.0.1/api/K", "2019-07-23 23:27:53.960", "88", "abcdefg", "20210830", "2021-08-20"));
+        clicks.add(Arrays.asList("67", "用户C", "http://127.0.0.1/api/J", "2019-07-23 23:28:02.990", "88", "abcdefg", "20210830", "2021-08-24"));
+        clicks.add(Arrays.asList("65", "用户A", "http://127.0.0.1/api/K", "2019-07-23 23:27:30.960", "88", "abcdefg", "20210830", "2021-08-20"));//晚到数据
+        clicks.add(Arrays.asList("69", "用户E", "http://127.0.0.1/api/K", "2019-07-23 23:28:08.012", "88", "abcdefg", "20210830", "2021-08-20"));
+        clicks.add(Arrays.asList("66", "用户B", "http://127.0.0.1/api/K", "2019-07-23 23:28:12.029", "88", "abcdefg", "20210830", "2021-08-24"));
+        clicks.add(Arrays.asList("69", "用户E", "http://127.0.0.1/api/I", "2019-07-23 23:27:39.918", "88", "abcdefg", "20210830", "2021-08-20"));//晚到数据
+        clicks.add(Arrays.asList("67", "用户C", "http://127.0.0.1/api/K", "2019-07-23 23:27:43.931", "88", "abcdefg", "20210830", "2021-08-21"));//晚到数据
+        clicks.add(Arrays.asList("66", "用户B", "http://127.0.0.1/api/K", "2019-07-23 23:28:20.000", "88", "abcdefg", "20210830", "2021-08-23"));
+        clicks.add(Arrays.asList("67", "用户C", "http://127.0.0.1/api/K", "2019-07-23 23:28:20.001", "88", "abcdefg", "20210830", "2021-08-23"));
+        clicks.add(Arrays.asList("67", "用户C", "http://127.0.0.1/api/O", "2019-07-23 23:28:20.581", "88", "abcdefg", "20210830", "2021-08-20"));
     }
 
     @Override
@@ -68,11 +68,15 @@ public class OutOfOrderRowDataSource extends RichSourceFunction<Row> {
         Iterator<List<String>> iterator = clicks.iterator();
         while (iterator.hasNext()) {
             List<String> record = iterator.next();
-            Row row = new Row(4);
+            Row row = new Row(8);
             row.setField(0, Integer.parseInt(record.get(0)));
             row.setField(1, record.get(1));
             row.setField(2, record.get(2));
             row.setField(3, Timestamp.valueOf(record.get(3)));
+            row.setField(4, Integer.parseInt(record.get(4)));
+            row.setField(5, record.get(5));
+            row.setField(6, record.get(6));
+            row.setField(7, record.get(7));
             logger.info("emit {} -> {}", Timestamp.valueOf(record.get(3)).getTime(), row);
             sourceContext.collect(row);
 

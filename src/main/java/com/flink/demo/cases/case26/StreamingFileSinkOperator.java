@@ -8,11 +8,17 @@ import org.apache.flink.streaming.api.operators.InternalTimerService;
 import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
+import org.apache.flink.streaming.runtime.tasks.ProcessingTimeCallback;
 import org.apache.flink.streaming.runtime.tasks.ProcessingTimeService;
 import org.apache.flink.util.Preconditions;
 
-import java.util.*;
-import java.util.function.BiFunction;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * StreamingFileSink的扩展,实现bucket关闭时,发出通知的功能
@@ -21,7 +27,7 @@ import java.util.function.BiFunction;
  * @param <BucketId> BucketId类型
  */
 public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOperator<BucketEvent>
-        implements OneInputStreamOperator<IN, BucketEvent> {
+        implements OneInputStreamOperator<IN, BucketEvent>, ProcessingTimeCallback {
 
     // ------------------------ configuration fields --------------------------
 
@@ -35,13 +41,16 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
 
     private transient StreamingFileSinkHelper<IN> helper;
 
+    private transient ProcessingTimeService procTimeService;
+
+    private static final String format = "yyyy-MM-dd HH:mm:ss.SSS";
+
     /**
      * We listen to this ourselves because we don't have an {@link InternalTimerService}.
      */
     private long currentWatermark = Long.MIN_VALUE;
 
     private transient Map<BucketId, BucketEvent> inactiveBuckets;
-    private transient Map<BucketId, Long> bucketCreationTime;
 
 
     /**
@@ -65,36 +74,43 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
     @Override
     public void initializeState(StateInitializationContext context) throws Exception {
         Buckets<IN, BucketId> buckets = bucketsBuilder.createBuckets(getRuntimeContext().getIndexOfThisSubtask());
-
+        procTimeService = getRuntimeContext().getProcessingTimeService();
 
         // Set listener before the initialization of Buckets.
         inactiveBuckets = new HashMap<>();
-        bucketCreationTime = new HashMap<>();
         buckets.setBucketLifeCycleListener(new BucketLifeCycleListener<IN, BucketId>() {
 
             @Override
             public void bucketCreated(Bucket<IN, BucketId> bucket) {
                 BucketId bucketId = bucket.getBucketId();
                 LOG.debug("Bucket {} is created", bucketId);
-                bucketCreationTime.computeIfAbsent(bucketId, v -> System.currentTimeMillis());
+                long createTime = bucket.getCreateTime();
+                inactiveBuckets.computeIfAbsent(bucketId, v -> {
+                    long time = createTime + bucketTimeout;
+                    LOG.debug("Bucket {} create time is {}", bucketId, formatDate(createTime, format));
+                    LOG.debug("Register timer {} for bucket {}", formatDate(time, format), bucketId);
+                    procTimeService.registerTimer(time, StreamingFileSinkOperator.this);
+                    BucketEvent bucketEvent = new BucketEvent(
+                            bucketId,
+                            getRuntimeContext().getIndexOfThisSubtask(),
+                            getRuntimeContext().getNumberOfParallelSubtasks(),
+                            bucket.getRecords(),
+                            bucket.getBucketPath().getPath(),
+                            bucket.getCreateTime());
+                    return bucketEvent;
+                });
             }
 
             @Override
             public void bucketInactive(Bucket<IN, BucketId> bucket) {
                 BucketId bucketId = bucket.getBucketId();
-                BucketEvent bucketEvent = new BucketEvent(
-                        bucketId,
-                        getRuntimeContext().getIndexOfThisSubtask(),
-                        getRuntimeContext().getNumberOfParallelSubtasks(),
-                        bucket.getRecords(),
-                        bucket.getBucketPath().getPath());
-                LOG.debug("Bucket {} is already inactive.", bucketEvent);
+                LOG.debug("Bucket {} is already inactive. inactive buckets size {}", bucketId, inactiveBuckets.size());
                 inactiveBuckets.compute(bucketId, (k, v) -> {
                     if (v == null) {
-                        return bucketEvent;
+                        throw new RuntimeException("Bucket " + bucketId + " was not exist.");
                     } else {
-                        bucketEvent.records += v.records;
-                        return bucketEvent;
+                        v.records += bucket.getRecords();
+                        return v;
                     }
                 });
             }
@@ -103,7 +119,7 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
                 buckets,
                 context.isRestored(),
                 context.getOperatorStateStore(),
-                getRuntimeContext().getProcessingTimeService(),
+                procTimeService,
                 bucketCheckInterval);
         currentWatermark = Long.MIN_VALUE;
     }
@@ -111,17 +127,6 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
     @Override
     public void notifyCheckpointComplete(long checkpointId) throws Exception {
         this.helper.commitUpToCheckpoint(checkpointId);
-        Iterator<BucketId> iterator = inactiveBuckets.keySet().iterator();
-        while (iterator.hasNext()) {
-            BucketId bucketId = iterator.next();
-            Long creationTime = bucketCreationTime.get(bucketId);
-            if (bucketTimeout <= System.currentTimeMillis() - creationTime) {
-                BucketEvent bucketEvent = inactiveBuckets.get(bucketId);
-                LOG.debug("Emit bucket event {}", bucketEvent);
-                output.collect(new StreamRecord<>(bucketEvent));
-                inactiveBuckets.remove(bucketId);
-            }
-        }
     }
 
     @Override
@@ -161,4 +166,29 @@ public class StreamingFileSinkOperator<IN, BucketId> extends AbstractStreamOpera
         this.currentWatermark = mark.getTimestamp();
     }
 
+    @Override
+    public void onProcessingTime(long timestamp) throws Exception {
+        LOG.debug("On processing time trigger at time {}", formatDate(timestamp, format));
+        Iterator<BucketId> iterator = inactiveBuckets.keySet().iterator();
+        while (iterator.hasNext()) {
+            BucketId bucketId = iterator.next();
+            BucketEvent bucketEvent = inactiveBuckets.get(bucketId);
+            Long creationTime = bucketEvent.createTime;
+            LOG.debug("Bucket {} create time {}, curr time {}", bucketId,
+                    formatDate(creationTime, format),
+                    formatDate(timestamp, format));
+            if (creationTime + bucketTimeout <= timestamp) {
+                LOG.debug("Emit bucket event {}", bucketEvent);
+                output.collect(new StreamRecord<>(bucketEvent));
+                iterator.remove();
+            }
+        }
+    }
+
+    private String formatDate(long time, String format) {
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(time),
+                ZoneId.systemDefault());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        return formatter.format(localDateTime);
+    }
 }
